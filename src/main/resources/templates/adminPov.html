@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin View - Borrowed Books</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/adminpov.css}">
+</head>
+<body>
+
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov" class="active"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <div class="header">
+            <h2>Admin - Borrowed Books</h2>
+            <p>Welcome Admin, <span th:text="${firstName}"></span> <span th:text="${lastName}"></span>!</p>
+        </div>
+
+        <div class="books-table">
+            <h3 id="borrow-Books">All - Borrowed Books</h3>
+
+            <div class="filter-controls">
+                <label for="filterAuthor">Author:</label>
+                <select id="filterAuthor">
+                    <option value="">All Authors</option>
+                    <option th:each="authorName : ${allAuthorNames}"
+                                th:value="${authorName}"
+                                th:text="${authorName}">
+                    </option>
+                </select>
+
+                <label for="filterBorrower">Borrower:</label>
+                <select id="filterBorrower">
+                    <option value="">All Borrowers</option>
+                    <option th:each="borrowerName : ${allBorrowerNames}"
+                                th:value="${borrowerName}"
+                                th:text="${borrowerName}">
+                    </option>
+                </select>
+
+                <label for="filterCategory">Category:</label>
+                <select id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option th:each="categoryName : ${allCategoryNames}"
+                                th:value="${categoryName}"
+                                th:text="${categoryName}">
+                    </option>
+                </select>
+            </div>
+            <table id="borrowedBooksTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Borrower</th>
+                        <th>Date Borrowed</th>
+                        <th>Time Borrowed</th>
+                        <th>Category</th>
+                        <th>Penalty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="borrowEntry : ${borrowedBooks}" th:id="'borrowed-entry-' + ${borrowEntry.id}">
+                        <td data-label="Title" th:text="${borrowEntry.book != null ? borrowEntry.book.title : 'N/A'}"></td>
+                        <td data-label="Author" th:text="${borrowEntry.book != null and borrowEntry.book.author != null ? borrowEntry.book.author.name : 'N/A'}"></td>
+                        <td data-label="Status" th:text="${borrowEntry.returnDate == null ? 'Borrowed' : 'Returned'}"></td>
+                        <td data-label="Borrower" th:text="${borrowEntry.borrowedBy}"></td>
+                        <td data-label="Date Borrowed" th:text="${borrowEntry.borrowDate}" class="borrow-date"></td>
+                        <td data-label="Time Borrowed" th:text="${borrowEntry.borrowTime}"></td>
+                        <td data-label="Category" th:text="${borrowEntry.book != null ? borrowEntry.book.category : 'N/A'}"></td>
+                        <td data-label="Penalty" class="penalty-cell">
+                            <span th:if="${borrowEntry.returnDate != null}" style="color: grey;">N/A</span>
+                        </td>
+                        <td data-label="Action">
+                            <button class="return-btn" th:attr="data-id=${borrowEntry.id}" th:if="${borrowEntry.returnDate == null}">Return</button>
+                            <span th:if="${borrowEntry.returnDate != null}" style="color: green;">Returned</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${borrowedBooks.isEmpty()}" id="noBorrowedBooksMessageAdmin"> 
+                        <td colspan="9" style="text-align: center;">No borrowed books found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="books-table">
+            <h3 id="available-Books">All - Available Books</h3>
+            <table id="availableBooksTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="book : ${availableBooks}">
+                        <td data-label="Title" th:text="${book != null ? book.title : 'N/A'}"></td>
+                        <td data-label="Author" th:text="${book.author != null ? book.author.name : 'N/A'}"></td>
+                        <td data-label="Status" th:text="${book != null ? book.status : 'N/A'}"></td>
+                        <td data-label="Quantity">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn minus-btn" th:attr="data-id=${book.id}">-</button>
+                                <input type="number" class="quantity-input" th:id="'quantity-input-' + ${book.id}" th:value="${book != null ? book.quantity : 0}" min="0">
+                                <button class="quantity-btn plus-btn" th:attr="data-id=${book.id}">+</button>
+                                <button class="quantity-btn apply-btn" th:attr="data-id=${book.id}">Apply</button>
+                            </div>
+                        </td>
+                        <td data-label="Actions">
+                            <button class="delete-btn" th:attr="data-id=${book.id}">Delete</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${availableBooks.isEmpty()}">
+                        <td colspan="5" style="text-align: center;">No available books found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+   <script>
+    function toggleMenu() {
+        const navLinks = document.getElementById("navLinks");
+        if (navLinks) {
+            navLinks.classList.toggle("show");
+        } else {
+            console.warn("Element with ID 'navLinks' not found for toggleMenu.");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const CONTEXT_PATH = "/LIBRARY"; 
+
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function() {
+                let bookId = this.getAttribute("data-id");
+                if (!bookId) {
+                    alert("Error: Book ID missing.");
+                    return;
+                }
+                if (confirm("Are you sure you want to delete this book?")) {
+                    fetch(`${CONTEXT_PATH}/admin/delete-book/${bookId}`, {
+                        method: "DELETE",
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Server error occurred.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        alert(data.message);
+                        if (data.success) location.reload();
+                    })
+                    .catch(error => alert("Failed to delete book. " + error.message));
+                }
+            });
+        });
+
+        document.querySelectorAll(".return-btn").forEach(button => {
+            button.addEventListener("click", function () {
+                let borrowEntryId = this.getAttribute("data-id");
+                const row = this.closest('tr');
+                const penaltyCell = row ? row.querySelector('.penalty-cell') : null;
+                let penaltyAmount = 0.0;
+
+                if (penaltyCell && penaltyCell.textContent && penaltyCell.textContent.trim() !== 'N/A' && penaltyCell.textContent.trim() !== 'No penalty') {
+                    penaltyAmount = parseFloat(penaltyCell.textContent.trim().replace('₱', ''));
+                    if (isNaN(penaltyAmount)) penaltyAmount = 0.0;
+                }
+
+                if (confirm("Are you sure you want to return this book?")) {
+                    fetch(`${CONTEXT_PATH}/return-book/${borrowEntryId}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ fine: penaltyAmount })
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Server error during return.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert("Book returned successfully!");
+                            location.reload();
+                        } else {
+                            alert("Error returning book: " + data.message);
+                        }
+                    })
+                    .catch(error => alert("Failed to return book. " + error.message));
+                }
+            });
+        });
+
+        document.querySelectorAll(".quantity-controls").forEach(controlDiv => {
+            const quantityBtn = controlDiv.querySelector(".quantity-btn");
+            if (!quantityBtn) return;
+            const bookId = quantityBtn.getAttribute("data-id");
+            const minusBtn = controlDiv.querySelector(".minus-btn");
+            const plusBtn = controlDiv.querySelector(".plus-btn");
+            const quantityInput = controlDiv.querySelector(".quantity-input");
+            const applyBtn = controlDiv.querySelector(".apply-btn");
+
+            if (!bookId || !minusBtn || !plusBtn || !quantityInput || !applyBtn) return;
+
+            function updateBookQuantity(newQuantity) {
+                if (isNaN(newQuantity) || newQuantity < 0) {
+                    alert("Quantity cannot be negative or invalid.");
+                    quantityInput.value = parseInt(quantityInput.value) || 0;
+                    return;
+                }
+                fetch(`${CONTEXT_PATH}/admin/update-book-quantity/${bookId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ quantity: newQuantity })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Server error updating quantity.');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        quantityInput.value = newQuantity;
+                        alert("Book quantity updated successfully!");
+                    } else {
+                        alert("Error updating quantity: " + data.message);
+                    }
+                })
+                .catch(error => alert("Failed to update book quantity. " + error.message));
+            }
+
+            minusBtn.addEventListener("click", () => {
+                let q = parseInt(quantityInput.value) || 0;
+                if (q > 0) updateBookQuantity(q - 1);
+            });
+
+            plusBtn.addEventListener("click", () => {
+                let q = parseInt(quantityInput.value) || 0;
+                updateBookQuantity(q + 1);
+            });
+
+            applyBtn.addEventListener("click", () => {
+                let q = parseInt(quantityInput.value);
+                if (!isNaN(q)) updateBookQuantity(q);
+            });
+        });
+
+        function applyBorrowedBooksFilters() {
+            const authorFilter = document.getElementById("filterAuthor")?.value.toLowerCase().trim() || '';
+            const borrowerFilter = document.getElementById("filterBorrower")?.value.toLowerCase().trim() || '';
+            const categoryFilter = document.getElementById("filterCategory")?.value.toLowerCase().trim() || '';
+
+            const table = document.getElementById("borrowedBooksTable");
+            if (!table) return;
+            const rows = table.getElementsByTagName("tr");
+            let hasVisibleRows = false;
+            const noBorrowedBooksMessageRow = document.getElementById("noBorrowedBooksMessageAdmin");
+            if (noBorrowedBooksMessageRow) noBorrowedBooksMessageRow.style.display = "none";
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.id === "noBorrowedBooksMessageAdmin") continue;
+
+                const cells = row.getElementsByTagName("td");
+                const author = cells[1] ? cells[1].textContent.toLowerCase().trim() : '';
+                const borrower = cells[3] ? cells[3].textContent.toLowerCase().trim() : '';
+                const category = cells[6] ? cells[6].textContent.toLowerCase().trim() : '';
+
+                let showRow = true;
+                if (authorFilter && !author.includes(authorFilter)) showRow = false;
+                if (borrowerFilter && !borrower.includes(borrowerFilter)) showRow = false;
+                if (categoryFilter && !category.includes(categoryFilter)) showRow = false;
+
+                row.style.display = showRow ? "" : "none";
+                if (showRow) hasVisibleRows = true;
+            }
+
+            if (!hasVisibleRows) {
+                if (noBorrowedBooksMessageRow) {
+                    noBorrowedBooksMessageRow.style.display = "";
+                    noBorrowedBooksMessageRow.innerHTML = `<td colspan="9" style="text-align: center;">No borrowed books found matching filters.</td>`;
+                }
+            }
+        }
+
+        function calculateAndDisplayPenalties() {
+            const PENALTY_PER_DAY = 10;
+            const GRACE_PERIOD_DAYS = 3;
+
+            document.querySelectorAll("#borrowedBooksTable tbody tr").forEach(row => {
+                if (row.id === "noBorrowedBooksMessageAdmin") return;
+
+                const statusCell = row.querySelector('td:nth-child(3)');
+                const borrowDateCell = row.querySelector('.borrow-date');
+                const penaltyCell = row.querySelector('.penalty-cell');
+
+                if (statusCell && statusCell.textContent.trim() === 'Borrowed' && borrowDateCell) {
+                    const borrowDate = new Date(borrowDateCell.textContent.trim());
+                    const currentDate = new Date();
+                    borrowDate.setHours(0, 0, 0, 0);
+                    currentDate.setHours(0, 0, 0, 0);
+
+                    const dayDiff = Math.ceil((currentDate - borrowDate) / (1000 * 60 * 60 * 24));
+                    let penaltyAmount = 0;
+                    if (dayDiff > GRACE_PERIOD_DAYS) {
+                        penaltyAmount = (dayDiff - GRACE_PERIOD_DAYS) * PENALTY_PER_DAY;
+                    }
+
+                    if (penaltyAmount > 0) {
+                        penaltyCell.textContent = `₱${penaltyAmount.toFixed(2)}`;
+                        penaltyCell.classList.add('penalty');
+                    } else {
+                        penaltyCell.textContent = 'No penalty';
+                        penaltyCell.classList.remove('penalty');
+                    }
+                } else if (statusCell && statusCell.textContent.trim() === 'Returned') {
+                    penaltyCell.textContent = 'N/A';
+                    penaltyCell.classList.remove('penalty');
+                }
+            });
+        }
+
+        document.getElementById("filterAuthor")?.addEventListener("change", applyBorrowedBooksFilters);
+        document.getElementById("filterBorrower")?.addEventListener("change", applyBorrowedBooksFilters);
+        document.getElementById("filterCategory")?.addEventListener("change", applyBorrowedBooksFilters);
+
+        applyBorrowedBooksFilters();
+        calculateAndDisplayPenalties();
+    });
+</script>
+   
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Categories</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/categories.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories" class="active"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Book Categories</h2>
+            <p>Browse books by category</p>
+        </div>
+
+        <input type="text" id="searchCategories" placeholder="Search categories..."
+               style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+        <div class="category-grid">
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Fiction</h3>
+                <a th:href="@{/books/category/Fiction}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Non-Fiction</h3>
+                <a th:href="@{/books/category/Non-Fiction}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Romance</h3>
+                <a th:href="@{/books/category/Romance}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Mystery</h3>
+                <a th:href="@{/books/category/Mystery}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Thriller</h3>
+                <a th:href="@{/books/category/Thriller}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Science Fiction</h3>
+                <a th:href="@{/books/category/Science Fiction}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Fantasy</h3>
+                <a th:href="@{/books/category/Fantasy}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">Biography</h3>
+                <a th:href="@{/books/category/Biography}" class="borrow-btn">View Books</a>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📖</div>
+                <h3 class="category-title">History</h3>
+                <a th:href="@{/books/category/History}" class="borrow-btn">View Books</a>
+            </div>
+        </div>
+
+        <div th:if="${selectedCategory}" class="category-books-container">
+            <h3 th:text="'Books in Category: ' + ${selectedCategory}">Science Fiction Books</h3>
+            <div class="category-book-list">
+                <div class="category-book-card" th:each="book : ${booksByCategory}">
+                    <h4 class="category-book-title" th:text="${book.title}">Book Title</h4>
+                    <p th:text="'Author: ' + ${book.author}">Author Name</p>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(booksByCategory)}">
+                <p>No books found in the <strong th:text="${selectedCategory}"></strong> category.</p>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("searchCategories").addEventListener("keyup", function() {
+                let filter = this.value.toLowerCase();
+                let cards = document.getElementsByClassName("category-card");
+
+                for (let i = 0; i < cards.length; i++) {
+                    let title = cards[i].getElementsByClassName("category-title")[0].textContent.toLowerCase();
+
+                    if (title.includes(filter)) {
+                        cards[i].style.display = "";
+                    } else {
+                        cards[i].style.display = "none";
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

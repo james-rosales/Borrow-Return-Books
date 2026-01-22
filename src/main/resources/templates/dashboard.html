@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard" class="active"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Dashboard</h2>
+            <p>Welcome, <span th:text="${firstName}"></span> <span th:text="${lastName}"></span>!</p>
+        </div>
+
+        <input type="hidden" id="totalPenalty" th:value="${totalPenalty}">
+
+        <div th:if="${totalPenalty > 0}" class="penalty-message">
+            You have an outstanding penalty of ₱<span th:text="${#numbers.formatDecimal(totalPenalty, 0, 'COMMA', 2, 'POINT')}"></span>. Please settle your penalty before borrowing more books.
+        </div>
+
+        <input type="text" id="searchAvailableBooks" placeholder="Search available books..."
+                style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+        <div class="books-by-category-container">
+            <h3 id="avail-Books">Available Books by Category</h3>
+
+            <div th:each="entry : ${categorizedAvailableBooks}" class="category-section">
+                <h3 th:text="${entry.key}">Category Name Placeholder</h3>
+                <div class="books-table">
+                    <table class="available-books-category-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Quantity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="book : ${entry.value}" th:id="'available-book-row-' + ${book.id}">
+                                <td>
+                                    <span th:text="${book.title}"></span>
+                                    <!-- Show reservation count if user has multiple reservations for this book -->
+                                    <span th:if="${reservationCounts != null and reservationCounts[book.id] != null and reservationCounts[book.id] > 0}" 
+                                          class="reservation-count-badge" 
+                                          th:text="'Reserved ×' + ${reservationCounts[book.id]}"></span>
+                                </td>
+                                <td th:text="${book.author.name}"></td>
+                                <td class="book-status" th:text="${book.status}" th:classappend="${book.status == 'Out of Stock' ? 'status-out-of-stock' : ''}"></td>
+                                <td class="book-quantity" th:text="${book.quantity}"></td>
+                                <td>
+                                    <button class="borrow-btn" th:data-id="${book.id}" onclick="borrowBook(this)" th:disabled="${book.quantity == 0}">Borrow</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div th:if="${categorizedAvailableBooks.isEmpty()}">
+                <p>No available books found.</p>
+            </div>
+        </div>
+        
+        <input type="text" id="searchBorrowedBooks" placeholder="Search borrowed books..."
+                style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+        <div class="books-table">
+            <h3 id="borrow-Books">Borrowed Books</h3>
+            <table id="borrowedBooksTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Borrower</th>
+                        <th>Date Borrowed</th>
+                        <th>Time Borrowed</th>
+                        <th>Penalty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="borrowEntry : ${borrowedBooks}" 
+                        th:id="'borrowed-entry-' + ${borrowEntry.id}" 
+                        th:data-borrow-date="${borrowEntry.borrowDate}" 
+                        th:data-has-penalty="false">
+                        <td th:text="${borrowEntry.book.title}"></td>
+                        <td th:text="${borrowEntry.book.author.name}"></td>
+                        <td>Borrowed</td>
+                        <td th:text="${borrowEntry.borrowedBy}"></td>
+                        <td class="borrow-date" th:text="${borrowEntry.borrowDate}"></td>
+                        <td th:text="${borrowEntry.borrowTime}"></td>
+                        <td class="fine-amount">₱0.00</td>
+                        <td>
+                            <button class="return-btn" 
+                                    th:data-id="${borrowEntry.id}"
+                                    th:data-book-id="${borrowEntry.book.id}"
+                                    th:data-book-title="${borrowEntry.book.title}"
+                                    onclick="showRatingModal(this)">Return</button>
+                        </td>
+                    </tr>
+                    <tr id="noBorrowedBooksMessage" th:if="${borrowedBooks.isEmpty()}">
+                        <td colspan="8" style="text-align: center;">No borrowed books found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- My Rating History Section -->
+        <div class="books-table" th:if="${myRatingHistory != null}">
+            <h3 id="my-rating-history">My Rating History</h3>
+            <table id="myRatingHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Date Reviewed</th>
+                        <th>Borrow Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rating : ${myRatingHistory}">
+                        <td>
+                            <span th:text="${rating.book.title}"></span>
+                            <!-- Show indicator if user has multiple ratings for this book -->
+                            <span th:if="${ratingCounts[rating.book.id] > 1}" 
+                                  class="multiple-ratings-indicator" 
+                                  th:text="'×' + ${ratingCounts[rating.book.id]}"></span>
+                        </td>
+                        <td>
+                            <span th:each="i : ${#numbers.sequence(1, rating.rating)}">⭐</span>
+                            <span th:text="'(' + ${rating.rating} + '/5)'"></span>
+                        </td>
+                        <td th:text="${rating.comment}"></td>
+                        <td th:text="${#temporals.format(rating.reviewDate, 'yyyy-MM-dd')}"></td>
+                        <td th:text="${#temporals.format(rating.borrowHistory.borrowDate, 'yyyy-MM-dd')}"></td>
+                    </tr>
+                    <tr th:if="${myRatingHistory.isEmpty()}">
+                        <td colspan="5" style="text-align: center;">No ratings found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div id="ratingModal" class="rating-modal">
+        <div class="rating-modal-content">
+            <h3>Rate Your Experience</h3>
+            <div class="rating-description">How was this book? Your feedback helps other readers!</div>
+            <div id="bookTitleDisplay" class="book-title-display"></div>
+            
+            <div class="star-rating" id="starRating">
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+                <span class="star" data-rating="4">★</span>
+                <span class="star" data-rating="5">★</span>
+            </div>
+            
+            <div class="rating-text" id="ratingText">Click a star to rate</div>
+            
+            <div class="comment-section">
+                <textarea id="reviewComment" 
+                         class="comment-textarea" 
+                         placeholder="Share your thoughts about this book (optional)..."></textarea>
+            </div>
+            
+            <div class="rating-buttons">
+                <button id="submitRating" class="rating-btn submit-rating" disabled>Submit Review</button>
+                <button id="skipRating" class="rating-btn skip-rating">Skip & Return</button>
+                <button id="cancelRating" class="rating-btn cancel-rating">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentBorrowEntryId = null;
+        let currentBookId = null;
+        let currentBookTitle = null;
+        let selectedRating = 0;
+        
+        // Track which reservations have been notified to avoid duplicate notifications
+        let notifiedReservations = new Set();
+        
+        const ratingTexts = {
+            1: "Poor - Didn't enjoy it",
+            2: "Fair - It was okay",
+            3: "Good - I liked it",
+            4: "Very Good - Really enjoyed it",
+            5: "Excellent - Loved it!"
+        };
+
+        function borrowBook(button) {
+            let totalPenalty = parseFloat(document.getElementById("totalPenalty").value);
+
+            if (totalPenalty > 0) {
+                alert("You have an outstanding penalty of ₱" + totalPenalty.toFixed(2) + ". Please settle your penalty before borrowing more books.");
+                return; 
+            }
+
+            let bookId = button.getAttribute("data-id");
+            let row = button.closest("tr");
+            let quantityCell = row.querySelector(".book-quantity");
+            let statusCell = row.querySelector(".book-status");
+
+            fetch('/LIBRARY/borrow-book/' + bookId, { 
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    quantityCell.textContent = data.updatedQuantity;
+                    statusCell.textContent = data.updatedBookStatus;
+                    if (data.updatedBookStatus === 'Out of Stock') {
+                        statusCell.classList.add('status-out-of-stock');
+                        button.disabled = true;
+                    } else {
+                        statusCell.classList.remove('status-out-of-stock');
+                        button.disabled = false;
+                    }
+                    
+                    addBookToBorrowedTable(
+                        data.borrowedEntryId,
+                        data.borrowedBookId,
+                        data.borrowedBookTitle,
+                        data.borrowedBookAuthor,
+                        data.borrowerName,
+                        data.borrowedDate,
+                        data.borrowedTime
+                    );
+                    
+                    document.getElementById("totalPenalty").value = data.totalPenalty;
+                    if (data.totalPenalty > 0) {
+                        disableBorrowButtons();
+                    }
+
+                    // Update reservation count display if applicable
+                    updateReservationCountDisplay(bookId);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function updateReservationCountDisplay(bookId) {
+            // This function can be enhanced to update reservation count badges
+            // For now, we'll just refresh the reservation notifications
+            checkForReservationNotifications();
+        }
+
+        function addBookToBorrowedTable(borrowEntryId, bookId, title, authorName, borrower, borrowedDate, borrowedTime) {
+            const borrowedBooksTableBody = document.querySelector("#borrowedBooksTable tbody");
+            const noBorrowedBooksMessageRow = document.getElementById("noBorrowedBooksMessage");
+
+            if (noBorrowedBooksMessageRow) {
+                noBorrowedBooksMessageRow.remove();
+            }
+
+            const newRow = document.createElement("tr");
+            newRow.id = 'borrowed-entry-' + borrowEntryId;
+            
+            newRow.setAttribute('data-borrow-date', Array.isArray(borrowedDate) ? borrowedDate.join('-') : borrowedDate);
+            newRow.setAttribute('data-has-penalty', 'false');
+
+            const formattedBorrowedDate = Array.isArray(borrowedDate) ? borrowedDate.join('-') : borrowedDate;
+            const formattedBorrowedTime = Array.isArray(borrowedTime) ? borrowedTime.map(num => String(num).padStart(2, '0')).slice(0, 3).join(':') : borrowedTime;
+
+            newRow.innerHTML = `
+                <td>${title}</td>
+                <td>${authorName}</td>
+                <td>Borrowed</td>
+                <td>${borrower}</td>
+                <td class="borrow-date">${formattedBorrowedDate}</td>
+                <td>${formattedBorrowedTime}</td>
+                <td class="fine-amount">₱0.00</td>
+                <td>
+                    <button class="return-btn" 
+                            data-id="${borrowEntryId}"
+                            data-book-id="${bookId}"
+                            data-book-title="${title}"
+                            onclick="showRatingModal(this)">Return</button>
+                </td>
+            `;
+            
+            borrowedBooksTableBody.prepend(newRow);
+            calculateAndUpdatePenalties();
+            updateReturnButtonStates();
+        }
+
+        function showRatingModal(button) {
+            let borrowEntryId = button.getAttribute("data-id");
+            let bookId = button.getAttribute("data-book-id");
+            let bookTitle = button.getAttribute("data-book-title");
+            let borrowedRow = button.closest("tr");
+            let fineAmountElement = borrowedRow.querySelector(".fine-amount");
+            let currentFine = parseFloat(fineAmountElement.textContent.replace('₱', ''));
+
+            if (currentFine > 0) {
+                alert("Please settle the penalty of ₱" + currentFine.toFixed(2) + " for this book before returning.");
+                return;
+            }
+
+            // Store current book info
+            currentBorrowEntryId = borrowEntryId;
+            currentBookId = bookId;
+            currentBookTitle = bookTitle;
+            
+            // Reset modal state
+            selectedRating = 0;
+            document.getElementById("bookTitleDisplay").textContent = bookTitle;
+            document.getElementById("reviewComment").value = "";
+            document.getElementById("submitRating").disabled = true;
+            document.getElementById("ratingText").textContent = "Click a star to rate";
+            
+            // Reset stars
+            updateStarDisplay();
+            
+            // Show modal
+            document.getElementById("ratingModal").style.display = "block";
+        }
+
+        function updateStarDisplay() {
+            const stars = document.querySelectorAll('.star');
+            const ratingText = document.getElementById('ratingText');
+            
+            stars.forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+            
+            if (selectedRating > 0) {
+                ratingText.textContent = ratingTexts[selectedRating];
+                document.getElementById("submitRating").disabled = false;
+            } else {
+                ratingText.textContent = "Click a star to rate";
+                document.getElementById("submitRating").disabled = true;
+            }
+        }
+
+        function submitReview() {
+            if (selectedRating === 0) {
+                alert("Please select a rating before submitting.");
+                return;
+            }
+
+            const comment = document.getElementById("reviewComment").value.trim();
+            
+            const reviewData = {
+                borrowHistoryId: currentBorrowEntryId,
+                bookId: currentBookId,
+                rating: selectedRating,
+                comment: comment
+            };
+
+            fetch('/LIBRARY/submit-rating-history', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(reviewData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add rating to the table if it exists
+                    addRatingToHistoryTable(currentBookTitle, selectedRating, comment, data.reviewDate, data.borrowDate);
+                    
+                    // Show success message for review
+                    alert("Rating submitted successfully!");
+                    
+                    // Close modal and proceed with return
+                    closeModal();
+                    proceedWithReturn();
+                } else {
+                    alert("Failed to submit rating: " + data.message);
+                    // Still proceed with return even if rating fails
+                    closeModal();
+                    proceedWithReturn();
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting rating:', error);
+                alert("Error submitting rating. Proceeding with book return.");
+                closeModal();
+                proceedWithReturn();
+            });
+        }
+
+        function addRatingToHistoryTable(bookTitle, rating, comment, reviewDate, borrowDate) {
+            const ratingHistoryTableBody = document.querySelector("#myRatingHistoryTable tbody");
+            if (!ratingHistoryTableBody) return;
+            
+            const noRatingsRow = ratingHistoryTableBody.querySelector('tr td[colspan="5"]');
+            if (noRatingsRow) {
+                noRatingsRow.parentElement.remove();
+            }
+
+            const newRow = document.createElement("tr");
+            const stars = '⭐'.repeat(rating);
+            newRow.innerHTML = `
+                <td>${bookTitle}</td>
+                <td>${stars} (${rating}/5)</td>
+                <td>${comment || ''}</td>
+                <td>${reviewDate}</td>
+                <td>${borrowDate}</td>
+            `;
+
+            ratingHistoryTableBody.prepend(newRow);
+        }
+
+        function skipRating() {
+            closeModal();
+            proceedWithReturn();
+        }
+
+        function closeModal() {
+            document.getElementById("ratingModal").style.display = "none";
+            selectedRating = 0;
+        }
+
+        function proceedWithReturn() {
+            if (!currentBorrowEntryId) {
+                console.error("No borrow entry ID found");
+                return;
+            }
+            
+            let borrowedRow = document.getElementById('borrowed-entry-' + currentBorrowEntryId);
+            if (!borrowedRow) {
+                console.error("Borrowed row not found for ID:", currentBorrowEntryId);
+                return;
+            }
+            
+            let borrowDateText = borrowedRow.getAttribute("data-borrow-date");
+            
+            let fine = 0;
+            if (borrowDateText) {
+                let borrowDate = new Date(borrowDateText);
+                let today = new Date();
+                
+                borrowDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                
+                let timeDiff = today.getTime() - borrowDate.getTime();
+                let daysBorrowed = Math.floor(timeDiff / (1000 * 3600 * 24));
+                let allowedDays = 3;
+                let finePerDay = 10;
+
+                if (daysBorrowed > allowedDays) {
+                    fine = (daysBorrowed - allowedDays) * finePerDay;
+                }
+            }
+            
+            console.log("Proceeding with return for borrow entry ID:", currentBorrowEntryId);
+            
+            fetch(`/LIBRARY/return-book/${currentBorrowEntryId}`, { 
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ fine: fine })
+            })
+            .then(response => {
+                console.log("Return response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Return response data:", data);
+                if (data.success) {
+                    alert(`Book returned successfully!\nFine: ₱${fine.toFixed(2)}\nThank you for your feedback!`);
+
+                    // Remove from borrowed books table
+                    borrowedRow.remove();
+                    console.log("Removed borrowed row for entry ID:", currentBorrowEntryId);
+
+                    // Check if borrowed books table is empty
+                    const borrowedBooksTableBody = document.querySelector("#borrowedBooksTable tbody");
+                    if (borrowedBooksTableBody.children.length === 0) {
+                        const noBooksRow = document.createElement("tr");
+                        noBooksRow.id = "noBorrowedBooksMessage";
+                        noBooksRow.innerHTML = `<td colspan="8" style="text-align: center;">No borrowed books found.</td>`;
+                        borrowedBooksTableBody.appendChild(noBooksRow);
+                    }
+
+                    // Update available books section with enhanced visibility
+                    updateAvailableBookDisplay(data.bookIdOfReturnedEntry, data.updatedBookQuantity, data.updatedBookStatus);
+                    
+                    // Check if there are any reservations for this book
+                    checkAndNotifyReservations(data.bookIdOfReturnedEntry);
+                    
+                    document.getElementById("totalPenalty").value = data.totalPenalty;
+                    calculateAndUpdatePenalties();
+                    updateReturnButtonStates();
+                    
+                    // Scroll to available books section to show the returned book
+                    setTimeout(() => {
+                        document.getElementById('avail-Books').scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }, 500);
+                    
+                    // Reset current book variables
+                    currentBorrowEntryId = null;
+                    currentBookId = null;
+                    currentBookTitle = null;
+                    
+                } else {
+                    console.error("Return failed:", data.message);
+                    alert("Something went wrong while returning the book: " + (data.message || "Unknown error"));
+                }
+            })
+            .catch(error => {
+                console.error("Error during return:", error);
+                alert("Error returning book: " + error.message);
+            });
+        }
+
+        // Enhanced function to update available book display
+        function updateAvailableBookDisplay(bookId, newQuantity, newStatus) {
+            // Find the book row in available books section
+            let availableBookRow = document.getElementById('available-book-row-' + bookId);
+            
+            if (availableBookRow) {
+                let quantityCell = availableBookRow.querySelector(".book-quantity");
+                let borrowButton = availableBookRow.querySelector(".borrow-btn");
+                let statusCell = availableBookRow.querySelector(".book-status");
+
+                // Update the values
+                quantityCell.textContent = newQuantity;
+                statusCell.textContent = newStatus;
+
+                // Update button and status styling
+                if (newStatus === 'Out of Stock') {
+                    statusCell.classList.add('status-out-of-stock');
+                    borrowButton.disabled = true;
+                } else {
+                    statusCell.classList.remove('status-out-of-stock');
+                    borrowButton.disabled = false;
+                }
+
+                // Add highlight animation to show the book was returned
+                availableBookRow.classList.add('book-returned-highlight');
+                
+                // Remove highlight after animation
+                setTimeout(() => {
+                    availableBookRow.classList.remove('book-returned-highlight');
+                }, 2000);
+
+                console.log(`Book ID ${bookId} updated: Quantity=${newQuantity}, Status=${newStatus}`);
+            } else {
+                console.log(`Available book row not found for book ID: ${bookId}`);
+                // If row not found, reload page to ensure consistency
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        function checkAndNotifyReservations(bookId) {
+            fetch(`/LIBRARY/check-reservations/${bookId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.hasReservations) {
+                    console.log(`Book ID ${bookId} has ${data.reservationCount} reservations waiting.`);
+                    // The backend will handle notifications to users
+                }
+            })
+            .catch(error => {
+                console.error('Error checking reservations:', error);
+            });
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.star');
+            const submitButton = document.getElementById('submitRating');
+            const skipButton = document.getElementById('skipRating');
+            const cancelButton = document.getElementById('cancelRating');
+            const modal = document.getElementById('ratingModal');
+
+            // Star rating functionality
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-rating'));
+                    updateStarDisplay();
+                });
+
+                star.addEventListener('mouseover', function() {
+                    const hoverRating = parseInt(this.getAttribute('data-rating'));
+                    stars.forEach((s, index) => {
+                        if (index < hoverRating) {
+                            s.style.color = '#ffd700';
+                            s.style.transform = 'scale(1.1)';
+                        } else {
+                            s.style.color = '#ddd';
+                            s.style.transform = 'scale(1)';
+                        }
+                    });
+                });
+            });
+
+            document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+                updateStarDisplay();
+                stars.forEach(star => {
+                    star.style.transform = 'scale(1)';
+                });
+            });
+
+            // Button event listeners for rating modal
+            submitButton.addEventListener('click', submitReview);
+            skipButton.addEventListener('click', skipRating);
+            cancelButton.addEventListener('click', closeModal);
+
+            // Close modals when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Initialize other functions
+            filterBooks("searchAvailableBooks", ".available-books-category-table");
+            filterBooks("searchBorrowedBooks", "#borrowedBooksTable");
+            calculateAndUpdatePenalties();
+            
+            // Check for reservation notifications only once on page load
+            checkForReservationNotifications();
+        });
+
+        function checkForReservationNotifications() {
+            fetch('/LIBRARY/check-available-reservations')
+            .then(response => response.json())
+            .then(data => {
+                if (data.availableReservations && data.availableReservations.length > 0) {
+                    // Filter out reservations that have already been notified
+                    const newAvailableReservations = data.availableReservations.filter(book => 
+                        !notifiedReservations.has(book.id)
+                    );
+                    
+                    if (newAvailableReservations.length > 0) {
+                        const message = `You have ${newAvailableReservations.length} reserved book(s) now available for borrowing!\n\n` +
+                                       newAvailableReservations.map(book => `- ${book.title}`).join('\n') +
+                                       '\n\nGo to "Reserve Books" page to borrow them.';
+                        alert(message);
+                        
+                        // Mark these reservations as notified
+                        newAvailableReservations.forEach(book => {
+                            notifiedReservations.add(book.id);
+                        });
+                        
+                        // Store notified reservations in localStorage to persist across page reloads
+                        localStorage.setItem('notifiedReservations', JSON.stringify([...notifiedReservations]));
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking reservation notifications:', error);
+            });
+        }
+
+        // Load previously notified reservations from localStorage
+        function loadNotifiedReservations() {
+            const stored = localStorage.getItem('notifiedReservations');
+            if (stored) {
+                try {
+                    const parsedReservations = JSON.parse(stored);
+                    notifiedReservations = new Set(parsedReservations);
+                } catch (e) {
+                    console.error('Error parsing stored notifications:', e);
+                    notifiedReservations = new Set();
+                }
+            }
+        }
+
+        // Clear notification tracking when user borrows a reserved book
+        function clearReservationNotification(bookId) {
+            notifiedReservations.delete(bookId);
+            localStorage.setItem('notifiedReservations', JSON.stringify([...notifiedReservations]));
+        }
+
+        function filterBooks(inputId, tableSelector) {
+            document.getElementById(inputId).addEventListener("keyup", function () {
+                let filter = this.value.toLowerCase();
+                let tables = document.querySelectorAll(tableSelector);
+
+                tables.forEach(table => {
+                    let rows = table.getElementsByTagName("tr");
+
+                    for (let i = 1; i < rows.length; i++) {
+                        if (rows[i].id === "noBorrowedBooksMessage" || rows[i].id === "noReservedBooksMessage") continue;
+
+                        let title = rows[i].cells[0].textContent.toLowerCase();
+                        let author = rows[i].cells[1].textContent.toLowerCase();
+                        let borrower = (rows[i].cells[3] ? rows[i].cells[3].textContent.toLowerCase() : '');
+
+                        if (title.includes(filter) || author.includes(filter) || borrower.includes(filter)) {
+                            rows[i].style.display = "";
+                        } else {
+                            rows[i].style.display = "none";
+                        }
+                    }
+                });
+            });
+        }
+
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+
+        function calculateAndUpdatePenalties() {
+            const borrowedRows = document.querySelectorAll("#borrowedBooksTable tbody tr:not(#noBorrowedBooksMessage)");
+            let currentTotalPenalty = 0;
+            
+            borrowedRows.forEach(row => {
+                const borrowDateText = row.getAttribute("data-borrow-date");
+                const fineCell = row.querySelector(".fine-amount");
+                const returnButton = row.querySelector(".return-btn");
+
+                if (borrowDateText && fineCell) {
+                    const borrowDate = new Date(borrowDateText);
+                    const today = new Date();
+
+                    borrowDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+
+                    const timeDiff = today.getTime() - borrowDate.getTime();
+                    const daysBorrowed = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+                    const allowedDays = 3;
+                    const finePerDay = 10;
+                    let fine = 0;
+
+                    if (daysBorrowed > allowedDays) {
+                        fine = (daysBorrowed - allowedDays) * finePerDay;
+                    }
+                    
+                    fineCell.textContent = `₱${fine.toFixed(2)}`;
+                    if (fine > 0) {
+                        row.setAttribute('data-has-penalty', 'true');
+                    } else {
+                        row.setAttribute('data-has-penalty', 'false');
+                    }
+                    currentTotalPenalty += fine;
+                }
+            });
+            
+            document.getElementById("totalPenalty").value = currentTotalPenalty;
+
+            const penaltyMessageDiv = document.querySelector(".penalty-message");
+            if (penaltyMessageDiv) {
+                const penaltyAmountSpan = penaltyMessageDiv.querySelector("span");
+                if (penaltyAmountSpan) {
+                    penaltyAmountSpan.textContent = currentTotalPenalty.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+                if (currentTotalPenalty > 0) {
+                    penaltyMessageDiv.style.display = 'block';
+                } else {
+                    penaltyMessageDiv.style.display = 'none';
+                }
+            }
+            
+            disableBorrowButtons();
+            updateReturnButtonStates();
+        }
+
+        function disableBorrowButtons() {
+            let totalPenalty = parseFloat(document.getElementById("totalPenalty").value);
+            document.querySelectorAll(".borrow-btn").forEach(button => {
+                if (totalPenalty > 0) {
+                    button.disabled = true;
+                } else {
+                    const row = button.closest("tr");
+                    const quantityCell = row.querySelector(".book-quantity");
+                    if (parseInt(quantityCell.textContent) > 0) {
+                        button.disabled = false;
+                    } else {
+                        button.disabled = true; 
+                    }
+                }
+            });
+        }
+
+        function updateReturnButtonStates() {
+            document.querySelectorAll("#borrowedBooksTable tbody tr:not(#noBorrowedBooksMessage)").forEach(row => {
+                const returnButton = row.querySelector(".return-btn");
+                const fineCell = row.querySelector(".fine-amount");
+                if (returnButton && fineCell) {
+                    const fine = parseFloat(fineCell.textContent.replace('₱', ''));
+                    if (fine > 0) {
+                        returnButton.disabled = true;
+                    } else {
+                        returnButton.disabled = false;
+                    }
+                }
+            });
+        }
+
+        // Initialize notification tracking on page load
+        loadNotifiedReservations();
+    </script>
+</body>
+</html>

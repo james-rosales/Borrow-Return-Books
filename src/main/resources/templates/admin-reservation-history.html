@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Reservation History</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/admin-reservation-history.css}">
+</head>
+<body>
+
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn active"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history" class="active">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>All Reservation History</h2>
+            <p>View and manage all user reservations</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card active">
+                <div class="stat-number" id="activeCount" th:text="${activeReservations != null ? activeReservations.size() : 0}">0</div>
+                <div class="stat-label">Active Reservations</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-number" id="completedCount" th:text="${completedReservations != null ? completedReservations.size() : 0}">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card cancelled">
+                <div class="stat-number" id="cancelledCount" th:text="${cancelledReservations != null ? cancelledReservations.size() : 0}">0</div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All Reservations</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchReservations">Search:</label>
+                    <input type="text" id="searchReservations" placeholder="Search by book, author, or borrower...">
+                </div>
+            </div>
+        </div>
+
+        <div class="books-table history-section" id="activeReservationsSection">
+            <h3><span>📋</span> Active Reservations</h3>
+            <table id="activeReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrower</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${activeReservations}" 
+                        th:id="'active-reservation-' + ${reservation.id}"
+                        class="reservation-row active-reservation">
+                        <td data-label="Title" th:text="${reservation.book.title}"></td>
+                        <td data-label="Author" th:text="${reservation.book.author.name}"></td>
+                        <td data-label="Borrower" th:text="${reservation.user.firstName + ' ' + reservation.user.lastName}"></td>
+                        <td data-label="Status" class="status-reserved">Active</td>
+                        <td data-label="Date Reserved" th:text="${reservation.reservationDate}"></td>
+                        <td data-label="Action">
+                            <button class="cancel-reserve-btn" 
+                                    th:data-id="${reservation.id}" 
+                                    onclick="cancelReservation(this)">Cancel</button>
+                        </td>
+                    </tr>
+                    <tr id="noActiveReservationsMessage" th:if="${activeReservations == null || activeReservations.isEmpty()}">
+                        <td colspan="6" class="no-data-message">No active reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="books-table history-section" id="completedReservationsSection">
+            <h3><span>✅</span> Completed Reservations</h3>
+            <table id="completedReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrower</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Date Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${completedReservations}" 
+                        class="reservation-row completed-reservation">
+                        <td data-label="Title" th:text="${reservation.book.title}"></td>
+                        <td data-label="Author" th:text="${reservation.book.author.name}"></td>
+                        <td data-label="Borrower" th:text="${reservation.user.firstName + ' ' + reservation.user.lastName}"></td>
+                        <td data-label="Status" class="status-completed">Completed</td>
+                        <td data-label="Date Reserved" th:text="${reservation.reservationDate}"></td>
+                        <td data-label="Date Completed" th:text="${reservation.completedDate}"></td>
+                    </tr>
+                    <tr id="noCompletedReservationsMessage" th:if="${completedReservations == null || completedReservations.isEmpty()}">
+                        <td colspan="6" class="no-data-message">No completed reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="books-table history-section" id="cancelledReservationsSection">
+            <h3><span>❌</span> Cancelled Reservations</h3>
+            <table id="cancelledReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Borrower</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Date Cancelled</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${cancelledReservations}" 
+                        class="reservation-row cancelled-reservation">
+                        <td data-label="Title" th:text="${reservation.book.title}"></td>
+                        <td data-label="Author" th:text="${reservation.book.author.name}"></td>
+                        <td data-label="Borrower" th:text="${reservation.user.firstName + ' ' + reservation.user.lastName}"></td>
+                        <td data-label="Status" class="status-cancelled">Cancelled</td>
+                        <td data-label="Date Reserved" th:text="${reservation.reservationDate}"></td>
+                        <td data-label="Date Cancelled" th:text="${reservation.cancelledDate}"></td>
+                    </tr>
+                    <tr id="noCancelledReservationsMessage" th:if="${cancelledReservations == null || cancelledReservations.isEmpty()}">
+                        <td colspan="6" class="no-data-message">No cancelled reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const CONTEXT_PATH = "/LIBRARY"; 
+
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+
+        function cancelReservation(button) {
+            const reservationId = button.getAttribute("data-id");
+            if (!reservationId) {
+                alert("Error: Reservation ID missing.");
+                return;
+            }
+            if (confirm("Are you sure you want to cancel this reservation?")) {
+                fetch(`${CONTEXT_PATH}/admin/cancel-reservation/${reservationId}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Reservation cancelled successfully!");
+                        // Reload to reflect changes (simplest way to move row to cancelled table)
+                        location.reload(); 
+                    } else {
+                        alert("Failed to cancel reservation: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cancelling reservation:', error);
+                    alert("Error cancelling reservation. Please try again later.");
+                });
+            }
+        }
+
+        function filterReservations() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchTerm = document.getElementById('searchReservations').value.toLowerCase();
+            
+            const sections = {
+                'active': document.getElementById('activeReservationsSection'),
+                'completed': document.getElementById('completedReservationsSection'),
+                'cancelled': document.getElementById('cancelledReservationsSection')
+            };
+            
+            Object.keys(sections).forEach(key => {
+                if (statusFilter === 'all' || statusFilter === key) {
+                    sections[key].style.display = 'block';
+                } else {
+                    sections[key].style.display = 'none';
+                }
+            });
+            
+            const allRows = document.querySelectorAll('.reservation-row');
+            allRows.forEach(row => {
+                const title = row.querySelector('[data-label="Title"]')?.textContent.toLowerCase() || '';
+                const author = row.querySelector('[data-label="Author"]')?.textContent.toLowerCase() || '';
+                const borrower = row.querySelector('[data-label="Borrower"]')?.textContent.toLowerCase() || '';
+                
+                if (title.includes(searchTerm) || author.includes(searchTerm) || borrower.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('statusFilter').addEventListener('change', filterReservations);
+            document.getElementById('searchReservations').addEventListener('keyup', filterReservations);
+        });
+    </script>
+</body>
+</html>

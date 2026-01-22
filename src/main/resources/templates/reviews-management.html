@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews Management</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/reviews-management.css}">
+</head>
+<body>
+
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn active"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews" class="active">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Reviews Management</h2>
+            <p>Manage pending reviews and view review history.</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" th:text="${pendingReviews.size()}">0</div>
+                <div>Pending Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" th:text="${allReviews.size()}">0</div>
+                <div>Total Reviews</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" th:text="${averageRating != null ? #numbers.formatDecimal(averageRating, 1, 1) : '0.0'}">0.0</div>
+                <div>Average Rating</div>
+            </div>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab('pending')">Pending Reviews</button>
+            <button class="tab-button" onclick="openTab('history')">All Reviews History</button>
+        </div>
+
+        <div id="pending" class="tab-content active">
+            <div class="books-table">
+                <h3>Pending Reviews Approval</h3>
+                <table id="reviewsTable">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="review : ${pendingReviews}" th:id="'review-row-' + ${review.id}">
+                            <td data-label="Book" th:text="${review.book.title}"></td>
+                            <td data-label="User" th:text="${review.user.firstName + ' ' + review.user.lastName}"></td>
+                            <td data-label="Rating">
+                                <span class="rating-stars" th:text="${'★'.repeat(review.rating) + '☆'.repeat(5-review.rating)}"></span>
+                            </td>
+                            <td data-label="Comment" class="review-comment" th:text="${review.comment}"></td>
+                            <td data-label="Date" th:text="${#temporals.format(review.reviewDate, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td data-label="Action">
+                                <button class="delete-btn" th:attr="data-id=${review.id}">Delete</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${pendingReviews.isEmpty()}" id="noPendingReviewsMessage">
+                            <td colspan="6" style="text-align: center;">No pending reviews.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="history" class="tab-content">
+            <div class="filter-controls">
+                <select id="filterRating">
+                    <option value="">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
+                </select>
+                <input type="text" id="searchReview" placeholder="Search book or user...">
+            </div>
+
+            <div class="books-table">
+                <h3>All Reviews History</h3>
+                <table id="ratingHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="review : ${allReviews}">
+                            <td data-label="Book" th:text="${review.book.title}"></td>
+                            <td data-label="User" th:text="${review.user.firstName + ' ' + review.user.lastName}"></td>
+                            <td data-label="Rating">
+                                <span class="rating-stars" th:text="${'★'.repeat(review.rating) + '☆'.repeat(5-review.rating)}"></span>
+                                <span style="display:none;" th:text="${review.rating}"></span> </td>
+                            <td data-label="Comment" class="review-comment" th:text="${review.comment}"></td>
+                            <td data-label="Date" th:text="${#temporals.format(review.reviewDate, 'yyyy-MM-dd HH:mm')}"></td>
+                        </tr>
+                        <tr th:if="${allReviews.isEmpty()}">
+                            <td colspan="5" style="text-align: center;">No review history found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONTEXT_PATH = "/LIBRARY";
+
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+
+        function openTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Deactivate all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Activate selected tab and button
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Delete Review Logic
+            document.querySelectorAll(".delete-btn").forEach(button => {
+                button.addEventListener("click", function() {
+                    const reviewId = this.getAttribute("data-id");
+                    if(confirm("Are you sure you want to delete this review?")) {
+                        fetch(`${CONTEXT_PATH}/admin/delete-review/${reviewId}`, {
+                            method: "DELETE"
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.success) {
+                                alert("Review deleted successfully");
+                                document.getElementById('review-row-' + reviewId).remove();
+                                
+                                // Check if table is empty after deletion
+                                const tbody = document.querySelector("#reviewsTable tbody");
+                                if (tbody.querySelectorAll("tr[id^='review-row-']").length === 0) {
+                                    const noRow = document.getElementById("noPendingReviewsMessage");
+                                    if (noRow) {
+                                        noRow.style.display = ""; 
+                                    } else {
+                                        const tr = document.createElement("tr");
+                                        tr.id = "noPendingReviewsMessage";
+                                        tr.innerHTML = '<td colspan="6" style="text-align: center;">No pending reviews.</td>';
+                                        tbody.appendChild(tr);
+                                    }
+                                }
+                            } else {
+                                alert("Error deleting review: " + data.message);
+                            }
+                        })
+                        .catch(error => alert("Server error: " + error));
+                    }
+                });
+            });
+
+            // Filter Logic for History Tab
+            function filterHistory() {
+                const ratingFilter = document.getElementById("filterRating").value;
+                const searchTerm = document.getElementById("searchReview").value.toLowerCase();
+                const rows = document.querySelectorAll("#ratingHistoryTable tbody tr");
+
+                rows.forEach(row => {
+                    if (row.cells.length < 5) return; // Skip empty message row
+
+                    const book = row.cells[0].textContent.toLowerCase();
+                    const user = row.cells[1].textContent.toLowerCase();
+                    // We put a hidden span with the number in the rating cell
+                    const rating = row.cells[2].querySelector("span:nth-child(2)") ? 
+                                   row.cells[2].querySelector("span:nth-child(2)").textContent : "";
+
+                    const matchesRating = ratingFilter === "" || rating === ratingFilter;
+                    const matchesSearch = book.includes(searchTerm) || user.includes(searchTerm);
+
+                    row.style.display = (matchesRating && matchesSearch) ? "" : "none";
+                });
+            }
+
+            document.getElementById("filterRating").addEventListener("change", filterHistory);
+            document.getElementById("searchReview").addEventListener("keyup", filterHistory);
+        });
+    </script>
+</body>
+</html>

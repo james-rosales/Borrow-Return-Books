@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Books by Author</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/authors.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors" class="active"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Search Books by Author</h2>
+            <p>Enter the name of an author to find their books.</p>
+        </div>
+
+        <form th:action="@{/authors}" method="get" style="width: 100%; padding: 8px; margin-bottom: 20px;">
+            <input type="text" id="searchAuthors" name="keyword" th:value="${keyword}" placeholder="Enter author name...">
+            <button type="submit" style="padding: 8px 12px; cursor: pointer;">Search</button>
+        </form>
+
+        <div th:if="${not #lists.isEmpty(books)}" class="search-results-container">
+            <h2>Search Results</h2>
+            <p th:if="${not #strings.isEmpty(keyword)}">Books by author: <span th:text="${authors != null and not #lists.isEmpty(authors) ? authors[0].name : keyword}"></span></p>
+            <div class="book-list">
+                <ul>
+                    <li th:each="book : ${books}" th:text="${book.title}"></li>
+                </ul>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(books) and not #strings.isEmpty(keyword)}">
+            <p>No books found for author "<span th:text="${keyword}"></span>".</p>
+        </div>
+    </div>
+
+    <script>
+        
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+    </script>
+</body>
+</html>

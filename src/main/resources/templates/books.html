@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Book</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/books.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn active"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form" class="active">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container main-content">
+        <h2>Add New Books</h2>
+
+        <div th:if="${message}" th:classappend="${messageType == 'success' ? 'success-message' : 'error-message'}">
+            <p th:text="${message}"></p>
+        </div>
+
+        <form action="/LIBRARY/addBook" method="post">
+            <div>
+                <label for="title">Book Title:</label>
+                <input type="text" id="title" name="title" placeholder="Enter book title" required>
+            </div>
+            <div>
+                <label for="author">Author:</label>
+                <select id="author" name="author.id" required>
+                    <option value="">Select an Author</option>
+                    <option th:each="author : ${authors}" th:value="${author.id}" th:text="${author.name}"></option>
+                </select>
+            </div>
+            <div>
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" min="1" required>
+            </div>
+            <div>
+                <label for="category">Category:</label>
+                <select name="category" id="category" required>
+                    <option value="">Select a Category</option>
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Fiction</option>
+                    <option value="Romance">Romance</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Science Fiction">Science Fiction</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Biography">Biography</option>
+                    <option value="History">History</option>
+                </select>
+            </div>
+            <button type="submit">Add Book</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+    </script>
+</body>
+</html>

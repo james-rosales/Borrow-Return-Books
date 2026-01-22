@@ -1,0 +1,313 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5; 
+    background: url(https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D) no-repeat center center fixed;
+    background-size: cover;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar Container */
+.navbar-container {
+    background-color: #fff; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+}
+
+/* Navbar Title */
+.navbar h2 {
+    color: #333;
+    margin-right: 20px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: #555;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-links a span {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    background-color: #e9ecef; 
+    color: #007bff; 
+}
+
+/* Logout Button */
+.logout {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #dc3545; 
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    margin-left: auto; 
+}
+
+.logout span {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.logout:hover {
+    background-color: #c82333;
+}
+
+/* Menu Toggle (for mobile) */
+.menu-toggle {
+    display: none;
+    color: #555;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1200px;
+    margin: 80px auto 20px; 
+    padding: 20px;
+    flex-grow: 1; 
+}
+
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.container h1 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.no-history {
+    color: #6c757d;
+    font-size: 18px;
+    text-align: center;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+/* Checkout History Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+thead th {
+    background-color: #f8f9fa; 
+    color: #495057;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 500;
+}
+
+tbody td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody td ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.borrowed {
+    color: #007bff; 
+    font-weight: bold;
+}
+
+.returned {
+    color: #28a745; 
+    font-weight: bold;
+}
+
+.return-button {
+    background-color: #dc3545; 
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.return-button:hover {
+    background-color: #c82333;
+}
+
+.container p a {
+    display: block;
+    margin-top: 20px;
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    text-align: center;
+}
+
+.container p a:hover {
+    color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .navbar {
+        margin-bottom: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-links {
+        display: none; 
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .nav-links a:last-child {
+        border-bottom: none;
+    }
+
+    .logout {
+        margin-top: 10px;
+        width: 100%;
+        margin-left: 0; 
+    }
+
+    .menu-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+
+    .main-content {
+        margin-top: 140px; 
+        padding: 15px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .container h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    table thead {
+        display: none; 
+    }
+
+    table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 15px;
+    }
+
+    table tbody td {
+        display: block;
+        padding: 8px 0;
+        border-bottom: none;
+    }
+
+    table tbody td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: inline-block;
+        width: 120px; 
+        margin-right: 10px;
+    }
+
+    table tbody td[data-label="Book Title"] ul li {
+        margin-left: 0;
+    }
+
+    .return-button {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .container p a {
+        font-size: 16px;
+    }
+}

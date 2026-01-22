@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Most Borrowed Books</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/most-borrowed-books.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn active"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed" class="active">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Most Borrowed Books</h2>
+        </div>
+
+        <div class="books-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Times Borrowed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="book : ${mostBorrowedBooks}">
+                        <td data-label="Title" th:text="${book[0]}"></td>
+                        <td data-label="Author" th:text="${book[1]}"></td>
+                        <td data-label="Times Borrowed" th:text="${book[2]}"></td>
+                    </tr>
+                    <tr th:if="${mostBorrowedBooks.isEmpty()}">
+                        <td colspan="3" style="text-align: center;">No borrowing data available yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+    </script>
+</body>
+</html>

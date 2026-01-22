@@ -1,0 +1,555 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5; /* Light gray background */
+    background: url(https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D) no-repeat center center fixed;
+    background-size: cover;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navbar Container */
+.navbar-container {
+    background-color: #fff; /* White navbar background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    align-items: center;
+}
+
+/* Navbar Title */
+.navbar h2 {
+    color: #333;
+    margin-right: 20px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: #555;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.nav-links a span {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    background-color: #e9ecef; /* Light gray hover */
+    color: #007bff; /* Blue active color */
+}
+
+/* Logout Button */
+.logout {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #dc3545; /* Red logout button */
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.logout span {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.logout:hover {
+    background-color: #c82333;
+}
+
+/* Menu Toggle (for mobile) */
+.menu-toggle {
+    display: none;
+    color: #555;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Sidebar (Initially Hidden) */
+.sidebar {
+    display: none; /* Hidden by default */
+    background-color: #343a40; /* Dark sidebar background */
+    color: #fff;
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    z-index: 1100; /* Above navbar */
+    overflow-y: auto;
+}
+
+.sidebar h2 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.sidebar a.logout {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #dc3545;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.sidebar a.logout:hover {
+    background-color: #c82333;
+}
+
+/* Main Content */
+.main-content {
+    max-width: 1200px;
+    margin: 80px auto 20px; /* Adjusted top margin for fixed navbar */
+    padding: 20px;
+    flex-grow: 1; /* Allow main content to take remaining vertical space */
+}
+
+.header {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.header h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.header p {
+    color: #6c757d; /* Muted text color */
+    font-size: 18px;
+}
+
+/* Search Input */
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ced4da; /* Light border */
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Books Table */
+.books-table {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.books-table h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.books-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.books-table thead th {
+    background-color: #f8f9fa; /* Light gray header */
+    color: #495057;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 500;
+}
+
+.books-table tbody td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.books-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.book-cover-img {
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.borrow-btn,
+.return-btn {
+    background-color: #007bff; /* Blue button */
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.borrow-btn:hover,
+.return-btn:hover {
+    background-color: #0056b3;
+}
+
+.borrow-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+#checkboxLimitError {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+#addToCartBtn,
+#proceedToCheckoutBtn {
+    background-color: #28a745; /* Green button */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+}
+
+#addToCartBtn:hover,
+#proceedToCheckoutBtn:hover {
+    background-color: #1e7e34;
+}
+
+/* Selected Books Cart */
+#cartItems {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+#cartItems li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+#cartItems li:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .navbar {
+        margin-bottom: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-links {
+        display: none; /* Hide on mobile by default */
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-links a {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .nav-links a:last-child {
+        border-bottom: none;
+    }
+
+    .logout {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .menu-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+
+    .main-content {
+        margin-top: 140px; /* Adjust for stacked navbar */
+        padding: 15px;
+    }
+
+    .header h2 {
+        font-size: 24px;
+    }
+
+    .header p {
+        font-size: 16px;
+    }
+}
+
+	.books-by-category-container {
+            margin-top: 20px;
+        }
+        .category-section {
+            margin-bottom: 30px; /* Space between categories */
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #ffffff; /* White background for each section */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+        }
+        .category-section h3 {
+            color: #4CAF50; /* Green heading for category */
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            border-bottom: 2px solid #4CAF50; /* Underline for category title */
+            padding-bottom: 10px;
+        }
+        /* Existing table styles (ensure they apply to new tables too) */
+        .books-table table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .books-table th, .books-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .books-table th {
+            background-color: #f2f2f2;
+        }
+        /* Style for Out of Stock status */
+        .status-out-of-stock {
+            color: red;
+            font-weight: bold;
+        }
+        .penalty-message {
+            color: red;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        /* Style for disabled return button with strikethrough */
+        .return-btn:disabled {
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+		
+        .cancel-reserve-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-reserve-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .status-reserved {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .status-cancelled {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .history-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .history-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-section h3 span {
+            margin-right: 8px;
+        }
+
+        .history-info {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card.active {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .stat-card.completed {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .stat-card.cancelled {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .reservation-highlight {
+            background-color: #fff3cd !important;
+            animation: highlightReservation 2s ease-in-out;
+        }
+
+        @keyframes highlightReservation {
+            0% { background-color: #fff3cd; }
+            50% { background-color: #ffeeba; }
+            100% { background-color: transparent; }
+        }
+        
