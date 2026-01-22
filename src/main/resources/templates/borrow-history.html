@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+ 	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borrow History</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/borrow-history.css}">
+</head>
+<body>
+
+	<div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/adminPov"><span>👤</span> Dashboard</a>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>📚</span> Books ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/add-book-form">Add New Books</a>
+                        <a href="/LIBRARY/admin/most-borrowed">Most Borrowed</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn active"><span>📜</span> History ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/borrow-history" class="active">Borrowed History</a>
+                        <a href="/LIBRARY/admin/history">Return History</a>
+                        <a href="/LIBRARY/admin/reservation-history">Reservation History</a>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="dropbtn"><span>⚙️</span> Manage ▾</button>
+                    <div class="dropdown-content">
+                        <a href="/LIBRARY/admin/reviews">Reviews</a>
+                        <a href="/LIBRARY/register/admin">Register Admin</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+            <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Borrow History</h1>
+        <button class="clear-history-button" onclick="clearBorrowHistory()">Clear All Borrow History</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Borrowed By</th>
+                    <th>Borrow Date</th>
+                    <th>Borrow Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="history : ${borrowHistory}">
+                    <td data-label="Book Title" th:text="${history.book.title}"></td>
+                    <td data-label="Borrowed By" th:text="${history.borrowedBy}"></td>
+                    <td data-label="Borrow Date" th:text="${#temporals.format(history.borrowDate, 'yyyy-MM-dd')}"></td>
+                    <td data-label="Borrow Time" th:text="${#temporals.format(history.borrowTime, 'HH:mm:ss')}"></td>
+                </tr>
+                <tr th:if="${borrowHistory.isEmpty()}">
+                    <td colspan="4" class="no-history">No borrow history available.</td>
+                </tr>
+            </tbody>
+        </table>
+        <a th:href="@{/adminPov}" class="back-link">Back to Admin Dashboard</a>
+    </div>
+
+    <script>
+    
+    const CONTEXT_PATH = "/LIBRARY"; 
+
+    function toggleMenu() {
+        const navLinks = document.getElementById("navLinks");
+        navLinks.classList.toggle("show");
+    }
+
+    function clearBorrowHistory() {
+        if (confirm("Are you sure you want to clear all borrow history? This action cannot be undone.")) {
+            
+            fetch(`${CONTEXT_PATH}/admin/clear-borrow-history`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' 
+                }
+            })
+            .then(response => {
+                
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Server error clearing history: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`Network response was not ok, status: ${response.status} ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('Borrow history cleared successfully!');
+                    window.location.reload();
+                } else {
+                    
+                    alert(`Failed to clear borrow history: ${data.message || "Unknown error occurred."}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing borrow history:', error); 
+                alert(`An error occurred while clearing borrow history. Please check the console for details. Error: ${error.message || "Unknown error"}`);
+            });
+        }
+    }
+    </script>
+    
+</body>
+</html>

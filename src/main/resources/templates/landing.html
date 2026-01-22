@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Library Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <a href="/LIBRARY/landing" class="logo">The Library Hub</a>
+            <nav>
+                <ul>
+                    <li><a href="#featured-books">Books</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                </ul>
+                <div class="header-buttons">
+                    <a href="/LIBRARY/login" class="btn btn-secondary">Login</a>
+                    <a href="/LIBRARY/registrationas" class="btn">Sign Up</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="container">
+            <h1>Your Digital Library, Beyond Books. Boundless Possibilities.</h1>
+            <p>Explore of our books, manage your favorites, and experience modern reading. Get started today with The Library Hub.</p>
+            <a href="/LIBRARY/registrationas" class="btn">Get Started Now!</a>
+        </div>
+    </section>
+
+    <section id="featured-books" class="featured-books-section">
+        <div class="container">
+            <h2>Featured Books Now</h2>
+            <div class="book-grid">
+                <div th:each="book : ${books}" class="book-item">
+                    <h3 th:text="${book.title}">Book Title</h3>
+                    <p class="author" th:text="${book.author != null ? book.author.name : 'Unknown Author'}">Book Author</p>
+                    <p class="book-status" th:classappend="${book.quantity <= 0 ? 'out-of-stock' : ''}">
+                        <span th:text="${book.quantity > 0 ? 'Available (' + book.quantity + ')' : 'Out of Stock'}">Available (5)</span>
+                    </p>
+                </div>
+            </div>
+            <div class="text-center" style="margin-top: 40px;">
+                <a href="/LIBRARY/dashboard" class="btn btn-secondary">View All Books</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2>Outstanding Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h3>Comprehensive Book Management</h3>
+                    <p>Easily add, edit, and categorize books, including all details like author, ISBN, and availability. An intuitive interface for librarians.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>User & Borrower Tracking</h3>
+                    <p>Manage user accounts, track borrowed and returned books, overdue items, and maintain a clear history for each patron.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Advanced Search & Discovery</h3>
+                    <p>Enable users to quickly find books by title, author, subject, or keywords. Enhance discovery with filtering options.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Reporting & Analytics</h3>
+                    <p>Gain deep insights into your library's operations with built-in reports on popular books, borrowing trends, and user activity.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Multi-Platform Accessibility</h3>
+                    <p>Accessible across various devices and browsers, ensuring your library is always within reach for everyone.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Secure & Scalable</h3>
+                    <p>Built with security in mind and designed to grow with your collection and user base.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works-section">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps-grid">
+                <div class="step-item">
+                    <div class="icon">📚</div>
+                    <h3>1. Register & Explore</h3>
+                    <p>Sign up for an account, then start exploring our extensive book collection.</p>
+                </div>
+                <div class="step-item">
+                    <div class="icon">📖</div>
+                    <h3>2. Borrow</h3>
+                    <p>Easily borrow books through your account.</p>
+                </div>
+                <div class="step-item">
+                    <div class="icon">🔄</div>
+                    <h3>3. Return & Discover More</h3>
+                    <p>Return books and explore new titles added to our growing collection.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="download" class="cta-section">
+        <div class="container">
+            <h2>Ready to Make a Change?</h2>
+            <p>Start improving your library operations today. Join The Library Hub and experience convenience and efficiency.</p>
+            <a href="/LIBRARY/registrationas" class="btn">Join Now!</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 The Library Hub. All Rights Reserved.</p>
+            <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>

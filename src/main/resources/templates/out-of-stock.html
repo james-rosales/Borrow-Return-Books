@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserve Books - Library System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/out-of-stock.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock" class="active"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Reserve Books</h2>
+            <p>Welcome, <span th:text="${firstName}"></span> <span th:text="${lastName}"></span>!</p>
+        </div>
+
+        <input type="hidden" id="totalPenalty" th:value="${totalPenalty}">
+
+        <div class="out-of-stock-info">
+            <h4>📋 Book Reservation System</h4>
+            <p>These books are currently out of stock. You can reserve them and we'll notify you when they become available for borrowing.</p>
+        </div>
+
+        <input type="text" id="searchOutOfStockBooks" placeholder="Search out of stock books..."
+                style="width: 100%; padding: 8px; margin-bottom: 20px;">
+
+        <div class="books-by-category-container">
+            <h3 id="out-of-stock-Books">Out of Stock Books by Category</h3>
+
+            <div th:each="entry : ${categorizedOutOfStockBooks}" class="category-section">
+                <h3 th:text="${entry.key}">Category Name Placeholder</h3>
+                <div class="books-table">
+                    <table class="out-of-stock-books-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="book : ${entry.value}" th:id="'out-of-stock-book-row-' + ${book.id}">
+                                <td th:text="${book.title}"></td>
+                                <td th:text="${book.author.name}"></td>
+                                <td th:text="${book.category}"></td>
+                                <td class="status-out-of-stock">Out of Stock</td>
+                                <td>
+                                    <button class="reserve-btn" 
+                                            th:data-id="${book.id}" 
+                                            th:data-title="${book.title}" 
+                                            th:data-author="${book.author.name}"
+                                            th:data-category="${book.category}"
+                                            onclick="showReservationModal(this)"
+                                            th:disabled="${!canReserve}">
+                                        <span th:if="${canReserve}">Reserve</span>
+                                        <span th:unless="${canReserve}">Cannot Reserve</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div th:if="${categorizedOutOfStockBooks.isEmpty()}">
+                <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <h3>🎉 Great News!</h3>
+                    <p>All books are currently available! No books are out of stock at the moment.</p>
+                    <a href="/LIBRARY/dashboard" style="color: #3498db; text-decoration: none;">← Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Reservations Section - Only show if there are ACTIVE reservations -->
+        <div class="books-table" id="myReservationsSection" th:if="${!reservedBooks.isEmpty() && hasActiveReservations}">
+            <h3 id="my-reservations">My Current Reservations</h3>
+            
+            <!-- Available Books Notification -->
+            <div class="available-notification" th:if="${hasAvailableReservations}">
+                <h4>🎉 Good News!</h4>
+                <p>Some of your reserved books are now available for borrowing! Look for the "Borrow" buttons below.</p>
+            </div>
+            
+            <table id="myReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Date Reserved</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${reservedBooks}" 
+                        th:if="${reservation.completedDate == null}"
+                        th:id="'my-reservation-' + ${reservation.id}">
+                        <td th:text="${reservation.book.title}"></td>
+                        <td th:text="${reservation.book.author.name}"></td>
+                        <td th:text="${reservation.book.category}"></td>
+                        <td th:text="${reservation.reservationDate}"></td>
+                        <td>
+                            <span th:if="${reservation.isAvailable}" style="color: #27ae60; font-weight: bold;">Available for Borrowing!</span>
+                            <span th:unless="${reservation.isAvailable}" style="color: #f39c12; font-weight: bold;">Reserved</span>
+                        </td>
+                        <td>
+                            <!-- Show Borrow button if book is available, Cancel button if not -->
+                            <button th:if="${reservation.isAvailable}"
+                                    class="borrow-btn" 
+                                    th:data-reservation-id="${reservation.id}"
+                                    th:data-book-id="${reservation.book.id}"
+                                    th:data-book-title="${reservation.book.title}"
+                                    th:data-book-author="${reservation.book.author.name}"
+                                    onclick="borrowReservedBook(this)">
+                                Borrow
+                            </button>
+                            <button th:unless="${reservation.isAvailable}"
+                                    class="cancel-reserve-btn" 
+                                    th:data-id="${reservation.id}"
+                                    onclick="cancelReservation(this)">
+                                Cancel
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Reservation Modal -->
+    <div id="reservationModal" class="reservation-modal">
+        <div class="reservation-modal-content">
+            <h3>Reserve Book</h3>
+            <div class="reservation-description">
+                This book is currently out of stock. Would you like to reserve it? 
+                You'll be notified when it becomes available for borrowing.
+            </div>
+            <div id="reserveBookTitleDisplay" class="book-title-display"></div>
+            
+            <div class="reservation-buttons">
+                <button id="confirmReservation" class="reservation-btn confirm-reservation">Confirm Reservation</button>
+                <button id="cancelReservation" class="reservation-btn cancel-reservation">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // For reservation
+        let reservationBookId = null;
+        let reservationBookTitle = null;
+        let reservationAuthor = null;
+        let reservationCategory = null;
+
+        // Get total penalty from server
+        let totalPenalty = /*[[${totalPenalty}]]*/ 0;
+
+        // Reservation Functions
+        function showReservationModal(button) {
+            reservationBookId = button.getAttribute("data-id");
+            reservationBookTitle = button.getAttribute("data-title");
+            reservationAuthor = button.getAttribute("data-author");
+            reservationCategory = button.getAttribute("data-category");
+            
+            document.getElementById("reserveBookTitleDisplay").textContent = reservationBookTitle;
+            document.getElementById("reservationModal").style.display = "block";
+        }
+
+        function closeReservationModal() {
+            document.getElementById("reservationModal").style.display = "none";
+            reservationBookId = null;
+            reservationBookTitle = null;
+            reservationAuthor = null;
+            reservationCategory = null;
+        }
+
+        function confirmReservation() {
+            if (!reservationBookId) {
+                alert("Error: No book selected for reservation.");
+                return;
+            }
+
+            const reservationData = {
+                bookId: reservationBookId
+            };
+
+            fetch('/LIBRARY/reserve-book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(reservationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Book reserved successfully! You'll be notified when it becomes available.");
+                    
+                    // Add to my reservations table if it exists
+                    addToMyReservationsTable(
+                        data.reservationId,
+                        reservationBookTitle,
+                        reservationAuthor,
+                        reservationCategory,
+                        data.reservationDate
+                    );
+                    
+                    // Disable the reserve button for this book
+                    const reserveButton = document.querySelector(`button[data-id="${reservationBookId}"]`);
+                    if (reserveButton) {
+                        reserveButton.disabled = true;
+                        reserveButton.textContent = "Already Reserved";
+                        reserveButton.style.backgroundColor = "#95a5a6";
+                    }
+                    
+                    // Close modal
+                    closeReservationModal();
+                } else {
+                    alert("Failed to reserve book: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error reserving book:', error);
+                alert("Error reserving book. Please try again later.");
+            });
+        }
+
+        function addToMyReservationsTable(reservationId, title, author, category, reservationDate) {
+            let reservationsTable = document.getElementById("myReservationsTable");
+            let reservationsSection = document.getElementById("myReservationsSection");
+            
+            // Create table if it doesn't exist
+            if (!reservationsTable) {
+                if (!reservationsSection) {
+                    reservationsSection = document.createElement("div");
+                    reservationsSection.className = "books-table";
+                    reservationsSection.id = "myReservationsSection";
+                    reservationsSection.innerHTML = `
+                        <h3 id="my-reservations">My Current Reservations</h3>
+                        <table id="myReservationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Category</th>
+                                    <th>Date Reserved</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    `;
+                    
+                    document.querySelector(".main-content").appendChild(reservationsSection);
+                    reservationsTable = document.getElementById("myReservationsTable");
+                }
+            }
+
+            const tbody = reservationsTable.querySelector("tbody");
+            const formattedDate = Array.isArray(reservationDate) ? reservationDate.join('-') : reservationDate;
+            
+            const newRow = document.createElement("tr");
+            newRow.id = 'my-reservation-' + reservationId;
+            newRow.setAttribute('data-completed', 'false');
+            newRow.innerHTML = `
+                <td>${title}</td>
+                <td>${author}</td>
+                <td>${category}</td>
+                <td>${formattedDate}</td>
+                <td style="color: #f39c12; font-weight: bold;">Reserved</td>
+                <td>
+                    <button class="cancel-reserve-btn" 
+                            data-id="${reservationId}"
+                            onclick="cancelReservation(this)">
+                        Cancel
+                    </button>
+                </td>
+            `;
+            
+            tbody.prepend(newRow);
+            
+            // Show the reservations section if it was hidden
+            if (reservationsSection) {
+                reservationsSection.style.display = "block";
+            }
+        }
+
+        function borrowReservedBook(button) {
+            // Check for penalties first
+            if (totalPenalty > 0) {
+                alert("You have an outstanding penalty of ₱" + totalPenalty.toFixed(2) + ". Please settle your penalty before borrowing more books.");
+                return;
+            }
+
+            const reservationId = button.getAttribute("data-reservation-id");
+            const bookId = button.getAttribute("data-book-id");
+            const bookTitle = button.getAttribute("data-book-title");
+            const bookAuthor = button.getAttribute("data-book-author");
+            
+            if (!bookId || !reservationId) {
+                alert("Error: Missing book or reservation information.");
+                return;
+            }
+
+            // Disable button to prevent double-clicking
+            button.disabled = true;
+            button.textContent = "Processing...";
+
+            // Call the new endpoint for borrowing reserved books
+            fetch('/LIBRARY/borrow-reserved-book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bookId: bookId,
+                    reservationId: reservationId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Book "${bookTitle}" borrowed successfully! The book has been added to your borrowed books.`);
+                    
+                    // Add success animation to the row
+                    const reservationRow = document.getElementById('my-reservation-' + reservationId);
+                    if (reservationRow) {
+                        reservationRow.classList.add('borrow-success-animation');
+                        
+                        // Remove from reservations table after animation
+                        setTimeout(() => {
+                            // Mark as completed
+                            reservationRow.setAttribute('data-completed', 'true');
+                            
+                            // Remove the row
+                            reservationRow.remove();
+                            
+                            // Check if all reservations are completed
+                            checkAndHideReservationsSection();
+                        }, 2000);
+                    }
+                    
+                    // Show success message and option to go to dashboard
+                    setTimeout(() => {
+                        if (confirm("Would you like to go to the Dashboard to see your borrowed books?")) {
+                            window.location.href = "/LIBRARY/dashboard";
+                        } else {
+                            // If user stays on the page, refresh to update the reservation list
+                            location.reload();
+                        }
+                    }, 2500);
+                    
+                } else {
+                    alert("Failed to borrow book: " + data.message);
+                    // Re-enable button on failure
+                    button.disabled = false;
+                    button.textContent = "Borrow";
+                }
+            })
+            .catch(error => {
+                console.error('Error borrowing reserved book:', error);
+                alert("Error borrowing book: " + error.message);
+                // Re-enable button on error
+                button.disabled = false;
+                button.textContent = "Borrow";
+            });
+        }
+
+        function cancelReservation(button) {
+            const reservationId = button.getAttribute("data-id");
+            
+            if (!reservationId) {
+                alert("Error: Reservation ID missing.");
+                return;
+            }
+            
+            if (confirm("Are you sure you want to cancel this reservation?")) {
+                fetch(`/LIBRARY/cancel-reservation/${reservationId}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Reservation cancelled successfully!");
+                        
+                        // Remove from my reservations table
+                        const reservationRow = document.getElementById('my-reservation-' + reservationId);
+                        if (reservationRow) {
+                            reservationRow.remove();
+                        }
+                        
+                        // Check if all reservations are completed or cancelled
+                        checkAndHideReservationsSection();
+                        
+                        // Re-enable reserve buttons for this book if visible
+                        location.reload(); // Simple way to refresh the page state
+                    } else {
+                        alert("Failed to cancel reservation: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cancelling reservation:', error);
+                    alert("Error cancelling reservation. Please try again later.");
+                });
+            }
+        }
+
+        function checkAndHideReservationsSection() {
+            const reservationsTableBody = document.querySelector("#myReservationsTable tbody");
+            const reservationsSection = document.getElementById("myReservationsSection");
+            
+            // Check if there are any active reservations left
+            let hasActiveReservations = false;
+            
+            if (reservationsTableBody) {
+                const rows = reservationsTableBody.querySelectorAll('tr:not([data-completed="true"])');
+                hasActiveReservations = rows.length > 0;
+            }
+            
+            // Hide the section if no active reservations
+            if (!hasActiveReservations && reservationsSection) {
+                reservationsSection.style.display = "none";
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reservation modal buttons
+            const confirmReservationButton = document.getElementById('confirmReservation');
+            const cancelReservationButton = document.getElementById('cancelReservation');
+            const reservationModal = document.getElementById('reservationModal');
+
+            // Button event listeners for reservation modal
+            if (confirmReservationButton) {
+                confirmReservationButton.addEventListener('click', confirmReservation);
+            }
+            if (cancelReservationButton) {
+                cancelReservationButton.addEventListener('click', closeReservationModal);
+            }
+
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === reservationModal) {
+                    closeReservationModal();
+                }
+            });
+
+            // Initialize search functionality
+            filterOutOfStockBooks();
+            
+            // Check if all reservations are completed on page load
+            checkAndHideReservationsSection();
+        });
+
+        function filterOutOfStockBooks() {
+            document.getElementById("searchOutOfStockBooks").addEventListener("keyup", function () {
+                let filter = this.value.toLowerCase();
+                let tables = document.querySelectorAll(".out-of-stock-books-table");
+
+                tables.forEach(table => {
+                    let rows = table.getElementsByTagName("tr");
+
+                    for (let i = 1; i < rows.length; i++) {
+                        let title = rows[i].cells[0].textContent.toLowerCase();
+                        let author = rows[i].cells[1].textContent.toLowerCase();
+                        let category = rows[i].cells[2].textContent.toLowerCase();
+
+                        if (title.includes(filter) || author.includes(filter) || category.includes(filter)) {
+                            rows[i].style.display = "";
+                        } else {
+                            rows[i].style.display = "none";
+                        }
+                    }
+                });
+            });
+        }
+
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${categoryName} + ' Books'">Category Books</title>
+    <link rel="stylesheet" th:href="@{/css/category-books.css}">
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard" class="active"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="back-button-container">
+            <a href="/LIBRARY/categories" class="back-button">&lt;</a>
+        </div>
+        <div class="header">
+            <h2 th:text="${categoryName} + ' Books'">Romance Books</h2>
+            <p>List of books under the category: <strong th:text="${categoryName}">Romance</strong></p>
+        </div>
+
+        <div class="book-list">
+            <div class="book-card" th:each="book : ${books}">
+                <h3 class="book-title" th:text="${book.title}">Book Title</h3>
+                <p class="book-author">By <span th:text="${book.author.name}">Author Name</span></p>
+            </div>
+        </div>
+
+        <div th:if="${books == null or books.isEmpty()}">
+            <p>No books found in the <strong th:text="${categoryName}"></strong> category.</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+    </script>
+</body>
+</html>

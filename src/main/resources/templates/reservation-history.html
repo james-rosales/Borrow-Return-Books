@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation History - Library System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" th:href="@{/css/reservation-history.css}">
+    <style>
+        .cancel-reserve-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-reserve-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .status-reserved {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .status-cancelled {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .history-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .history-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .history-section h3 span {
+            margin-right: 8px;
+        }
+
+        .history-info {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .filter-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card.active {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .stat-card.completed {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .stat-card.cancelled {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .reservation-highlight {
+            background-color: #fff3cd !important;
+            animation: highlightReservation 2s ease-in-out;
+        }
+
+        @keyframes highlightReservation {
+            0% { background-color: #fff3cd; }
+            50% { background-color: #ffeeba; }
+            100% { background-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar-container">
+        <div class="navbar">
+            <h2>Library System</h2>
+            <div class="nav-links" id="navLinks">
+                <a href="/LIBRARY/dashboard"><span>📊</span> Dashboard</a>
+                <a href="/LIBRARY/categories"><span>🗂️</span> Categories</a>
+                <a href="/LIBRARY/authors"><span>✍️</span> Authors</a>
+                <a href="/LIBRARY/out-of-stock"><span>📋</span> Reserve Books</a>
+                <a href="/LIBRARY/reservation-history" class="active"><span>📜</span> Reservation History</a>
+            </div>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <a href="/LIBRARY/user/logout" class="logout">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Reservation History</h2>
+            <p>Manage and view your book reservations</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-container">
+            <div class="stat-card active">
+                <div class="stat-number" id="activeCount" th:text="${activeReservations != null ? activeReservations.size() : 0}">0</div>
+                <div class="stat-label">Active Reservations</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-number" id="completedCount" th:text="${completedReservations != null ? completedReservations.size() : 0}">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card cancelled">
+                <div class="stat-number" id="cancelledCount" th:text="${cancelledReservations != null ? cancelledReservations.size() : 0}">0</div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All Reservations</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="searchReservations">Search:</label>
+                    <input type="text" id="searchReservations" placeholder="Search by book title or author...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Reservations Section -->
+        <div class="books-table history-section" id="activeReservationsSection">
+            <h3><span>📋</span> Active Reservations</h3>
+            <p class="history-info">These are your current active reservations. You can cancel them if needed.</p>
+            <table id="activeReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${activeReservations}" 
+                        th:id="'active-reservation-' + ${reservation.id}"
+                        class="reservation-row active-reservation">
+                        <td th:text="${reservation.book.title}"></td>
+                        <td th:text="${reservation.book.author.name}"></td>
+                        <td class="status-reserved">Active</td>
+                        <td th:text="${reservation.reservationDate}"></td>
+                        <td>
+                            <button class="cancel-reserve-btn" 
+                                    th:data-id="${reservation.id}"
+                                    th:data-book-id="${reservation.book.id}"
+                                    onclick="cancelReservation(this)">Cancel</button>
+                        </td>
+                    </tr>
+                    <tr id="noActiveReservationsMessage" th:if="${activeReservations == null || activeReservations.isEmpty()}">
+                        <td colspan="5" class="no-data-message">No active reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Completed Reservations Section -->
+        <div class="books-table history-section" id="completedReservationsSection">
+            <h3><span>✅</span> Completed Reservations</h3>
+            <p class="history-info">These reservations were successfully borrowed and returned.</p>
+            <table id="completedReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Date Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${completedReservations}" 
+                        class="reservation-row completed-reservation">
+                        <td th:text="${reservation.book.title}"></td>
+                        <td th:text="${reservation.book.author.name}"></td>
+                        <td class="status-completed">Completed</td>
+                        <td th:text="${reservation.reservationDate}"></td>
+                        <td th:text="${reservation.completedDate}"></td>
+                    </tr>
+                    <tr id="noCompletedReservationsMessage" th:if="${completedReservations == null || completedReservations.isEmpty()}">
+                        <td colspan="5" class="no-data-message">No completed reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cancelled Reservations Section -->
+        <div class="books-table history-section" id="cancelledReservationsSection">
+            <h3><span>❌</span> Cancelled Reservations</h3>
+            <p class="history-info">These reservations were cancelled by you or the system.</p>
+            <table id="cancelledReservationsTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Date Reserved</th>
+                        <th>Date Cancelled</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="reservation : ${cancelledReservations}" 
+                        class="reservation-row cancelled-reservation">
+                        <td th:text="${reservation.book.title}"></td>
+                        <td th:text="${reservation.book.author.name}"></td>
+                        <td class="status-cancelled">Cancelled</td>
+                        <td th:text="${reservation.reservationDate}"></td>
+                        <td th:text="${reservation.cancelledDate}"></td>
+                    </tr>
+                    <tr id="noCancelledReservationsMessage" th:if="${cancelledReservations == null || cancelledReservations.isEmpty()}">
+                        <td colspan="5" class="no-data-message">No cancelled reservations found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function cancelReservation(button) {
+            const reservationId = button.getAttribute("data-id");
+            
+            if (!reservationId) {
+                alert("Error: Reservation ID missing.");
+                return;
+            }
+            
+            if (confirm("Are you sure you want to cancel this reservation?")) {
+                fetch(`/LIBRARY/cancel-reservation/${reservationId}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Reservation cancelled successfully!");
+                        
+                        // Remove from active reservations table
+                        const activeRow = document.getElementById('active-reservation-' + reservationId);
+                        if (activeRow) {
+                            activeRow.remove();
+                        }
+                        
+                        // Update statistics
+                        updateStatistics();
+                        
+                        // Check if active reservations table is empty
+                        const activeTableBody = document.querySelector("#activeReservationsTable tbody");
+                        if (activeTableBody.children.length === 0) {
+                            const noActiveRow = document.createElement("tr");
+                            noActiveRow.id = "noActiveReservationsMessage";
+                            noActiveRow.innerHTML = `<td colspan="5" class="no-data-message">No active reservations found.</td>`;
+                            activeTableBody.appendChild(noActiveRow);
+                        }
+                        
+                        // Add to cancelled reservations table
+                        addToCancelledTable(data.reservation);
+                        
+                    } else {
+                        alert("Failed to cancel reservation: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error cancelling reservation:', error);
+                    alert("Error cancelling reservation. Please try again later.");
+                });
+            }
+        }
+
+        function addToCancelledTable(reservation) {
+            const cancelledTableBody = document.querySelector("#cancelledReservationsTable tbody");
+            const noCancelledMessage = document.getElementById("noCancelledReservationsMessage");
+            
+            if (noCancelledMessage) {
+                noCancelledMessage.remove();
+            }
+            
+            const newRow = document.createElement("tr");
+            newRow.className = "reservation-row cancelled-reservation";
+            newRow.innerHTML = `
+                <td>${reservation.bookTitle}</td>
+                <td>${reservation.authorName}</td>
+                <td class="status-cancelled">Cancelled</td>
+                <td>${reservation.reservationDate}</td>
+                <td>${reservation.cancelledDate}</td>
+            `;
+            
+            cancelledTableBody.prepend(newRow);
+        }
+
+        function updateStatistics() {
+            const activeCount = document.querySelectorAll('.active-reservation').length;
+            const completedCount = document.querySelectorAll('.completed-reservation').length;
+            const cancelledCount = document.querySelectorAll('.cancelled-reservation').length;
+            
+            document.getElementById('activeCount').textContent = activeCount;
+            document.getElementById('completedCount').textContent = completedCount;
+            document.getElementById('cancelledCount').textContent = cancelledCount;
+        }
+
+        function filterReservations() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchTerm = document.getElementById('searchReservations').value.toLowerCase();
+            
+            // Show/hide sections based on status filter
+            const sections = {
+                'active': document.getElementById('activeReservationsSection'),
+                'completed': document.getElementById('completedReservationsSection'),
+                'cancelled': document.getElementById('cancelledReservationsSection')
+            };
+            
+            Object.keys(sections).forEach(key => {
+                if (statusFilter === 'all' || statusFilter === key) {
+                    sections[key].style.display = 'block';
+                } else {
+                    sections[key].style.display = 'none';
+                }
+            });
+            
+            // Filter rows by search term
+            const allRows = document.querySelectorAll('.reservation-row');
+            allRows.forEach(row => {
+                const title = row.cells[0].textContent.toLowerCase();
+                const author = row.cells[1].textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || author.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleMenu() {
+            const navLinks = document.getElementById("navLinks");
+            navLinks.classList.toggle("show");
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filter event listeners
+            document.getElementById('statusFilter').addEventListener('change', filterReservations);
+            document.getElementById('searchReservations').addEventListener('keyup', filterReservations);
+            
+            // Initialize statistics
+            updateStatistics();
+        });
+    </script>
+</body>
+</html>
